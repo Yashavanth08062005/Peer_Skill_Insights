@@ -131,7 +131,7 @@ const PaymentPage = () => {
             // Create Beckn confirm request
             const confirmRequest = {
                 context: {
-                    domain: type === 'flight' ? 'mobility' : 'hospitality',
+                    domain: (type === 'flight' || type === 'bus' || type === 'train') ? 'mobility' : 'hospitality',
                     country: 'IND',
                     city: 'std:080',
                     action: 'confirm',
@@ -221,12 +221,18 @@ const PaymentPage = () => {
                     booking_type: type,
                     item_id: item.id,
                     provider_id: item.providerId || 'provider-001',
-                    item_name: type === 'flight' ? (item.details?.airline || item.airline) : (item.details?.name || item.name),
-                    item_code: type === 'flight' ? (item.details?.flightNumber || item.flightNumber) : (item.details?.hotelId || item.id),
-                    origin: type === 'flight' ? item.origin : null,
-                    destination: type === 'flight' ? item.destination : null,
-                    departure_time: type === 'flight' ? (item.details?.departureTime || item.departureTime) : null,
-                    arrival_time: type === 'flight' ? (item.details?.arrivalTime || item.arrivalTime) : null,
+                    item_name: type === 'flight' ? (item.details?.airline || item.airline) : 
+                              type === 'bus' ? (item.descriptor?.name || item.details?.name || item.name) :
+                              type === 'train' ? (item.descriptor?.name || item.details?.name || item.name) :
+                              (item.details?.name || item.name),
+                    item_code: type === 'flight' ? (item.details?.flightNumber || item.flightNumber) : 
+                              type === 'bus' ? (item.descriptor?.code || item.details?.code || item.id) :
+                              type === 'train' ? (item.descriptor?.code || item.details?.code || item.id) :
+                              (item.details?.hotelId || item.id),
+                    origin: (type === 'flight' || type === 'bus' || type === 'train') ? (item.origin || item.details?.origin) : null,
+                    destination: (type === 'flight' || type === 'bus' || type === 'train') ? (item.destination || item.details?.destination) : null,
+                    departure_time: (type === 'flight' || type === 'bus' || type === 'train') ? (item.details?.departureTime || item.departureTime || item.time?.timestamp) : null,
+                    arrival_time: (type === 'flight' || type === 'bus' || type === 'train') ? (item.details?.arrivalTime || item.arrivalTime) : null,
                     check_in_date: type === 'hotel' ? (item.checkIn || item.details?.checkIn) : null,
                     check_out_date: type === 'hotel' ? (item.checkOut || item.details?.checkOut) : null,
                     passenger_name: bookingData.passenger_name,

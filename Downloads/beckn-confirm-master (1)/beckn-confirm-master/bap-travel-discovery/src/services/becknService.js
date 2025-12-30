@@ -258,8 +258,6 @@ class BecknService {
                 serviceType = 'Hotels BPP';
             } else if (itemCategory.toLowerCase().includes('bus')) {
                 bppUrl = this.busesBppUrl;
-            } else if (itemCategory.toLowerCase().includes('bus')) {
-                bppUrl = this.busesBppUrl;
                 serviceType = 'Buses BPP';
             } else if (itemCategory.toLowerCase().includes('train')) {
                 bppUrl = this.trainsBppUrl;

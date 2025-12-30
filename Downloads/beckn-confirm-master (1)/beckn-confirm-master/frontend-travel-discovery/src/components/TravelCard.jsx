@@ -81,10 +81,18 @@ const TravelCard = ({ option }) => {
             {/* Airline Name & Flight Number */}
             <div className="flex items-center space-x-3 mb-2">
               <h3 className="font-bold text-lg text-gray-900">
-                {details.airline || details.operator || details.trainName || (option.travelMode === 'bus' ? 'Bus Operator' : option.travelMode === 'train' ? 'Train Name' : 'Airline')}
+                {details.airline || 
+                 option.descriptor?.name || 
+                 details.operator || 
+                 details.trainName || 
+                 (option.travelMode === 'bus' ? 'Bus Operator' : option.travelMode === 'train' ? 'Train Name' : 'Airline')}
               </h3>
               <span className="text-sm text-gray-500">
-                {details.flightNumber || details.trainNumber || details.busNumber || 'N/A'}
+                {details.flightNumber || 
+                 details.trainNumber || 
+                 details.busNumber || 
+                 option.descriptor?.code || 
+                 'N/A'}
               </span>
               {isInternational && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">

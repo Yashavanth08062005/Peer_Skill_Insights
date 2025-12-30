@@ -67,7 +67,7 @@ const BookingPage = () => {
             // Create Beckn confirm request
             const confirmRequest = {
                 context: {
-                    domain: type === 'flight' ? 'mobility' : 'hospitality',
+                    domain: (type === 'flight' || type === 'bus' || type === 'train') ? 'mobility' : 'hospitality',
                     country: 'IND',
                     city: 'std:080',
                     action: 'confirm',

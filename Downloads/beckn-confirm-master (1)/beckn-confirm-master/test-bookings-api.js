@@ -1,56 +1,62 @@
+/**
+ * Test the bookings API to see if it returns the correct data
+ */
+
 const axios = require('axios');
 
-const API_BASE_URL = 'http://localhost:8081';
+const BAP_URL = 'http://localhost:8081';
 
-async function testBookingsAPI() {
+async function testBookingsApi() {
+    console.log('🔍 Testing bookings API...\n');
+    
     try {
-        console.log('🧪 Testing Bookings API for pratham@gmail.com...\n');
-
-        // Test the exact API call that the frontend makes
-        const endpoint = `/api/bookings/email/pratham@gmail.com`;
-        console.log('📡 API Call:', `${API_BASE_URL}${endpoint}`);
-
-        const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-        const bookings = response.data.bookings || [];
-
-        console.log('✅ API Response received');
-        console.log('📊 Status:', response.status);
-        console.log('📋 Bookings count:', bookings.length);
-
-        if (bookings.length > 0) {
-            console.log('\n📝 Bookings found:');
-            bookings.forEach((booking, index) => {
-                console.log(`${index + 1}. ${booking.item_name} - ${booking.booking_reference}`);
-                console.log(`   Email: ${booking.passenger_email}`);
-                console.log(`   Status: ${booking.booking_status}`);
-                console.log(`   Amount: ₹${booking.amount}`);
-                console.log(`   Created: ${new Date(booking.created_at).toLocaleString()}`);
-                console.log('');
-            });
-
-            console.log('🎯 This is what should appear in "Your Bookings" page');
-        } else {
-            console.log('❌ No bookings found - this is why "Your Bookings" is empty');
-        }
-
-        // Test the fallback emails too
-        console.log('\n🔍 Testing fallback emails...');
-        const fallbackEmails = ['pratham@example.com', 'test@example.com'];
+        // Test the bookings API endpoint
+        const response = await axios.get(`${BAP_URL}/api/bookings/email/yashavanthkate@gmal.com`);
         
-        for (const email of fallbackEmails) {
-            try {
-                const fallbackResponse = await axios.get(`${API_BASE_URL}/api/bookings/email/${email}`);
-                const fallbackBookings = fallbackResponse.data.bookings || [];
-                console.log(`📧 ${email}: ${fallbackBookings.length} bookings`);
-            } catch (error) {
-                console.log(`📧 ${email}: Error or no bookings`);
+        console.log('✅ Bookings API response received');
+        console.log(`   Total bookings: ${response.data.count}`);
+        
+        if (response.data.bookings && response.data.bookings.length > 0) {
+            console.log('\n📋 Recent bookings from API:');
+            
+            // Show the most recent 5 bookings
+            const recentBookings = response.data.bookings.slice(0, 5);
+            
+            recentBookings.forEach((booking, index) => {
+                console.log(`\n${index + 1}. ${booking.booking_reference}`);
+                console.log(`   Type: ${booking.booking_type}`);
+                console.log(`   Route: ${booking.origin || 'N/A'} → ${booking.destination || 'N/A'}`);
+                console.log(`   Amount: ${booking.currency} ${booking.amount}`);
+                console.log(`   Status: ${booking.booking_status}`);
+                console.log(`   Created: ${booking.created_at}`);
+                console.log(`   Item Name: ${booking.item_name || 'N/A'}`);
+            });
+            
+            // Check specifically for bus bookings
+            const busBookings = response.data.bookings.filter(b => b.booking_type === 'bus');
+            console.log(`\n🚌 Bus bookings found: ${busBookings.length}`);
+            
+            if (busBookings.length > 0) {
+                console.log('\n🚌 Bus bookings details:');
+                busBookings.slice(0, 3).forEach((booking, index) => {
+                    console.log(`\n${index + 1}. ${booking.booking_reference}`);
+                    console.log(`   Route: ${booking.origin || 'N/A'} → ${booking.destination || 'N/A'}`);
+                    console.log(`   Amount: ${booking.currency} ${booking.amount}`);
+                    console.log(`   Created: ${booking.created_at}`);
+                });
             }
+            
+        } else {
+            console.log('❌ No bookings returned from API');
         }
-
+        
     } catch (error) {
-        console.error('❌ API Error:', error.response?.data || error.message);
-        console.log('This error would cause "Your Bookings" to show empty');
+        console.error('❌ Error testing bookings API:', error.message);
+        if (error.response) {
+            console.error('   Response status:', error.response.status);
+            console.error('   Response data:', error.response.data);
+        }
     }
 }
 
-testBookingsAPI().catch(console.error);
+testBookingsApi();
