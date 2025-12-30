@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const PaymentSuccess = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const { transactionId, bookingData, item, type } = location.state || {};
     const [bookingReference, setBookingReference] = useState('');
     const [saving, setSaving] = useState(true);
@@ -18,27 +18,70 @@ const PaymentSuccess = () => {
             return;
         }
 
+        // Wait for auth to finish loading before saving
+        if (loading) return;
+
         // Save booking to database
         saveBookingToDatabase();
-    }, [transactionId, navigate]);
+    }, [transactionId, navigate, loading, user]);
 
     const saveBookingToDatabase = async () => {
         try {
             const API_BASE_URL = import.meta.env.VITE_BAP_URL || 'http://localhost:8081';
             const bookingRef = `BK${Date.now().toString().slice(-8)}`;
-            
+
+            // Try to get user ID from multiple sources
+            let userId = user?.id;
+            if (!userId) {
+                try {
+                    const storedUser = localStorage.getItem('user_data'); // Check usual storage keys
+                    if (storedUser) {
+                        userId = JSON.parse(storedUser).id;
+                    }
+                } catch (e) {
+                    console.error('Error parsing stored user:', e);
+                }
+            }
+
+            // Robust data extraction for different booking types
+            let itemName = item.details?.name || item.name;
+            let itemCode = item.details?.code || item.code || item.id;
+            let origin = item.origin;
+            let destination = item.destination;
+            let departureTime = item.details?.departureTime;
+            let arrivalTime = item.details?.arrivalTime;
+
+            // Type-specific overrides
+            if (type === 'flight') {
+                itemName = item.details?.airline;
+                itemCode = item.details?.flightNumber;
+            } else if (type === 'hotel') {
+                itemCode = item.details?.hotelId;
+                origin = null; // Hotels don't have origin
+                destination = item.details?.city || item.city;
+            } else if (type === 'bus') {
+                itemName = item.details?.operator || item.operator_name;
+                origin = item.details?.departureCity || item.origin;
+                destination = item.details?.arrivalCity || item.destination;
+            } else if (type === 'train') {
+                itemName = item.details?.trainName || item.train_name;
+                itemCode = item.details?.trainNumber || item.train_number;
+                origin = item.details?.fromStation || item.origin;
+                destination = item.details?.toStation || item.destination;
+            }
+
             const bookingPayload = {
                 booking_reference: bookingRef,
-                user_id: user?.id || null,
+                user_id: userId || null,
                 booking_type: type,
                 item_id: item.id,
                 provider_id: item.providerId,
-                item_name: type === 'flight' ? item.details?.airline : item.details?.name,
-                item_code: type === 'flight' ? item.details?.flightNumber : item.details?.hotelId,
-                origin: type === 'flight' ? item.origin : null,
-                destination: type === 'flight' ? item.destination : null,
-                departure_time: type === 'flight' ? item.details?.departureTime : null,
-                arrival_time: type === 'flight' ? item.details?.arrivalTime : null,
+                item_name: itemName,
+                item_code: itemCode,
+                origin: origin,
+                destination: destination,
+                departure_time: departureTime,
+                arrival_time: arrivalTime,
                 check_in_date: type === 'hotel' ? item.checkIn : null,
                 check_out_date: type === 'hotel' ? item.checkOut : null,
                 passenger_name: bookingData.passenger_name,
@@ -70,7 +113,7 @@ const PaymentSuccess = () => {
             console.log('💾 Saving booking to database:', bookingPayload);
 
             const response = await axios.post(`${API_BASE_URL}/api/bookings`, bookingPayload);
-            
+
             console.log('✅ Booking saved successfully:', response.data);
             setBookingReference(bookingRef);
             setSaving(false);
@@ -132,7 +175,7 @@ const PaymentSuccess = () => {
                                         {type === 'flight' ? 'Flight' : 'Hotel'}
                                     </span>
                                     <span className="font-medium text-gray-900">
-                                        {type === 'flight' 
+                                        {type === 'flight'
                                             ? `${item.origin} → ${item.destination}`
                                             : item.details?.name
                                         }

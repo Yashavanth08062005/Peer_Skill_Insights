@@ -6,14 +6,14 @@ class TrainsService {
     gpsToCity(gps) {
         if (!gps) return null;
         const cityMap = {
-            '28.5665,77.1031': 'Delhi', '28.7041,77.1025': 'Delhi',
-            '19.0896,72.8656': 'Mumbai', '19.0760,72.8777': 'Mumbai',
-            '12.9716,77.5946': 'Bangalore',
-            '17.2403,78.4294': 'Hyderabad',
-            '15.3808,73.8389': 'Goa', '15.2993,74.1240': 'Goa',
-            '18.5822,73.9197': 'Pune',
-            '13.0827,80.2707': 'Chennai',
-            '12.9941,80.1709': 'Chennai' // Add MAA airport GPS mapping
+            '28.5665,77.1031': 'DEL', '28.7041,77.1025': 'DEL',
+            '19.0896,72.8656': 'BOM', '19.0760,72.8777': 'BOM',
+            '12.9716,77.5946': 'BLR',
+            '17.2403,78.4294': 'HYD',
+            '15.3808,73.8389': 'GOI', '15.2993,74.1240': 'GOI',
+            '18.5822,73.9197': 'PNQ',
+            '13.0827,80.2707': 'MAA',
+            '12.9941,80.1709': 'MAA' // Add MAA airport GPS mapping
         };
         return cityMap[gps] || null;
     }

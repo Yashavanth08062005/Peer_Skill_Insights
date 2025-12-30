@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS bpp_bookings (
 INSERT INTO buses (bus_id, operator_name, bus_type, departure_city, arrival_city, 
     departure_location, arrival_location, departure_time, arrival_time, duration_minutes, 
     price, currency, seats_available, amenities, status)
-SELECT 'KSRTC-BM-001', 'KSRTC', 'Volvo Club Class', 'Bangalore', 'Mumbai', 
+SELECT 'KSRTC-BM-001', 'KSRTC', 'Volvo Club Class', 'BLR', 'BOM', 
      'Kempegowda Bus Station', 'Mumbai Central',
      NOW() + INTERVAL '1 day 18 hours', NOW() + INTERVAL '2 days 10 hours', 960, 
      1800.00, 'INR', 35, 
@@ -53,7 +53,7 @@ WHERE NOT EXISTS (SELECT 1 FROM buses WHERE bus_id = 'KSRTC-BM-001');
 INSERT INTO buses (bus_id, operator_name, bus_type, departure_city, arrival_city, 
     departure_location, arrival_location, departure_time, arrival_time, duration_minutes, 
     price, currency, seats_available, amenities, status)
-SELECT 'VRL-BM-002', 'VRL Travels', 'AC Sleeper', 'Bangalore', 'Mumbai',
+SELECT 'VRL-BM-002', 'VRL Travels', 'AC Sleeper', 'BLR', 'BOM',
      'Anand Rao Circle', 'Sion Circle',
      NOW() + INTERVAL '1 day 20 hours', NOW() + INTERVAL '2 days 14 hours', 1080,
      2200.00, 'INR', 28,
@@ -63,7 +63,7 @@ WHERE NOT EXISTS (SELECT 1 FROM buses WHERE bus_id = 'VRL-BM-002');
 INSERT INTO buses (bus_id, operator_name, bus_type, departure_city, arrival_city, 
     departure_location, arrival_location, departure_time, arrival_time, duration_minutes, 
     price, currency, seats_available, amenities, status)
-SELECT 'SRS-BD-001', 'SRS Travels', 'Scania Multi-Axle', 'Bangalore', 'Delhi',
+SELECT 'SRS-BD-001', 'SRS Travels', 'Scania Multi-Axle', 'BLR', 'DEL',
      'Madiwala', 'Kashmere Gate',
      NOW() + INTERVAL '2 days 10 hours', NOW() + INTERVAL '4 days 2 hours', 2400,
      3500.00, 'INR', 40,
@@ -73,7 +73,7 @@ WHERE NOT EXISTS (SELECT 1 FROM buses WHERE bus_id = 'SRS-BD-001');
 INSERT INTO buses (bus_id, operator_name, bus_type, departure_city, arrival_city, 
     departure_location, arrival_location, departure_time, arrival_time, duration_minutes, 
     price, currency, seats_available, amenities, status)
-SELECT 'KAD-MG-001', 'Kadamba Transport', 'Volvo AC', 'Mumbai', 'Goa',
+SELECT 'KAD-MG-001', 'Kadamba Transport', 'Volvo AC', 'BOM', 'GOI',
      'Borivali', 'Panjim',
      NOW() + INTERVAL '1 day 22 hours', NOW() + INTERVAL '2 days 10 hours', 720,
      1200.00, 'INR', 45,
