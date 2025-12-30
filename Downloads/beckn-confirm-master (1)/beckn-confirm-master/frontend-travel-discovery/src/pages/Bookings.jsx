@@ -354,7 +354,7 @@ const Bookings = () => {
 
     const filteredBookings = bookings.filter(booking => {
         if (filter === 'all') return true;
-        return booking.booking_type === filter;
+        return booking.booking_type?.toLowerCase() === filter.toLowerCase();
     });
 
     if (loading) {
@@ -498,11 +498,11 @@ const Bookings = () => {
                                     {/* Left Section - Booking Details */}
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-3">
-                                            {booking.booking_type === 'flight' ? (
+                                            {booking.booking_type?.toLowerCase() === 'flight' ? (
                                                 <Plane className="h-6 w-6 text-blue-600" />
-                                            ) : booking.booking_type === 'hotel' ? (
+                                            ) : booking.booking_type?.toLowerCase() === 'hotel' ? (
                                                 <Hotel className="h-6 w-6 text-blue-600" />
-                                            ) : booking.booking_type === 'bus' ? (
+                                            ) : booking.booking_type?.toLowerCase() === 'bus' ? (
                                                 <Bus className="h-6 w-6 text-blue-600" />
                                             ) : (
                                                 <Train className="h-6 w-6 text-blue-600" />
