@@ -391,9 +391,18 @@ const Bookings = () => {
                                             )}
                                             <div>
                                                 <h3 className="text-lg font-bold text-gray-900">
-                                                    {booking.item_name}
+                                                    {booking.booking_type === 'bus' || booking.booking_type === 'train' 
+                                                        ? (booking.item_code || booking.item_id || 'N/A')
+                                                        : (booking.item_name || 'N/A')
+                                                    }
                                                 </h3>
-                                                <p className="text-sm text-gray-600">{booking.item_code}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {booking.booking_type === 'bus' || booking.booking_type === 'train' 
+                                                        ? (booking.item_name && booking.item_name !== 'null' ? booking.item_name : 
+                                                           booking.booking_type === 'bus' ? 'Bus Operator' : 'Train Service')
+                                                        : (booking.item_code || 'N/A')
+                                                    }
+                                                </p>
                                             </div>
                                             <div className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 ${getStatusColor(booking.booking_status)}`}>
                                                 {getStatusIcon(booking.booking_status)}
