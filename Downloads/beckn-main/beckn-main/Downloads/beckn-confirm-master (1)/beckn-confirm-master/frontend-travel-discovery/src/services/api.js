@@ -136,6 +136,90 @@ export const searchTravelOptions = async (searchData) => {
       throw new Error('Transport mode is required for search');
     }
 
+    if (searchData.transportMode === 'all') {
+      console.log('🌐 Executing aggregated search for ALL categories');
+
+      // 1. Mobility Search (Flights, Trains, Buses) - effectively assumes 'flight' triggers generic mobility search or default
+      const mobilityPromise = api.post('/beckn/search', {
+        context: createBecknContext('search'),
+        message: { intent: createSearchIntent({ ...searchData, transportMode: 'flight' }) }
+      }).catch(err => {
+        console.warn('⚠️ Mobility search failed:', err);
+        return { data: { message: { catalog: { providers: [] } } } };
+      });
+
+      // 2. Hospitality Search (Hotels) - Use destination as cityCode
+      const hotelSearchData = { ...searchData, transportMode: 'hotel', cityCode: searchData.destination };
+      const hospitalityPromise = api.post('/beckn/search', {
+        context: createBecknContext('search'),
+        message: { intent: createSearchIntent(hotelSearchData) }
+      }).catch(err => {
+        console.warn('⚠️ Hospitality search failed:', err);
+        return { data: { message: { catalog: { providers: [] } } } };
+      });
+
+      // 3. Experience Search - Use destination as cityCode
+      const experienceSearchData = { ...searchData, transportMode: 'experience', cityCode: searchData.destination };
+      const experiencePromise = api.post('/beckn/search', {
+        context: createBecknContext('search'),
+        message: { intent: createSearchIntent(experienceSearchData) }
+      }).catch(err => {
+        console.warn('⚠️ Experience search failed:', err);
+        return { data: { message: { catalog: { providers: [] } } } };
+      });
+
+      // Wait for all
+      const [mobilityRes, hospitalityRes, experienceRes] = await Promise.all([
+        mobilityPromise,
+        hospitalityPromise,
+        experiencePromise
+      ]);
+
+      console.log('📥 Aggregated responses received');
+
+      const items = [];
+
+      // Process Mobility
+      const mobilityProviders = mobilityRes.data?.message?.catalog?.providers || [];
+      mobilityProviders.forEach(provider => {
+        if (provider.items) {
+          provider.items.forEach(item => {
+            // Heuristic to determine mode if category_id is generic or missing
+            let effectiveMode = 'flight'; // Default
+            if (item.category_id === 'BUS') effectiveMode = 'bus';
+            else if (item.category_id === 'TRAIN') effectiveMode = 'train';
+            else if (item.category_id === 'FLIGHT') effectiveMode = 'flight';
+
+            items.push(transformBecknItem(item, provider, effectiveMode));
+          });
+        }
+      });
+
+      // Process Hospitality
+      const hospitalityProviders = hospitalityRes.data?.message?.catalog?.providers || [];
+      hospitalityProviders.forEach(provider => {
+        if (provider.items) {
+          provider.items.forEach(item => {
+            items.push(transformBecknItem(item, provider, 'hotel'));
+          });
+        }
+      });
+
+      // Process Experience
+      const experienceProviders = experienceRes.data?.message?.catalog?.providers || [];
+      experienceProviders.forEach(provider => {
+        if (provider.items) {
+          provider.items.forEach(item => {
+            items.push(transformBecknItem(item, provider, 'experience'));
+          });
+        }
+      });
+
+      console.log(`✅ Aggregated ${items.length} items from all categories`);
+      return items;
+    }
+
+    // Standard single-category search
     // Create Beckn search request
     const becknRequest = {
       context: createBecknContext('search'),
@@ -184,8 +268,6 @@ export const searchTravelOptions = async (searchData) => {
           } else if (searchData.transportMode === 'flight') {
             // Include only if category is FLIGHT (or default/undefined which we assume is flight for legacy)
             shouldInclude = item.category_id === 'FLIGHT' || !item.category_id;
-          } else if (searchData.transportMode === 'train') {
-            // Include only if category is explicitly TRAIN
           } else if (searchData.transportMode === 'train') {
             // Include only if category is explicitly TRAIN
             shouldInclude = item.category_id === 'TRAIN';

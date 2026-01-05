@@ -49,6 +49,7 @@ const SearchForm = ({ prefill }) => {
       {/* Transport Tabs */}
       <div className="flex flex-wrap gap-3 mb-6 border-b pb-4 justify-center">
         {[
+          { label: "All", mode: "all" },
           { label: "Flights", mode: "flight" },
           { label: "Hotels", mode: "hotel" },
           { label: "Buses", mode: "bus" },
@@ -71,7 +72,7 @@ const SearchForm = ({ prefill }) => {
 
       {/* Search Form */}
       <form onSubmit={handleSubmit}>
-        {searchData.transportMode === "flight" || searchData.transportMode === "bus" || searchData.transportMode === "train" ? (
+        {searchData.transportMode === "all" || searchData.transportMode === "flight" || searchData.transportMode === "bus" || searchData.transportMode === "train" ? (
           /* Flight, Bus & Train Search Fields */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <AutoCompleteInput
@@ -270,10 +271,11 @@ const SearchForm = ({ prefill }) => {
         >
           <Search className="h-5 w-5" />
           <span>
-            Search {searchData.transportMode === "flight" ? "Flights" :
-              searchData.transportMode === "hotel" ? "Hotels" :
-                searchData.transportMode === "bus" ? "Buses" :
-                  searchData.transportMode === "train" ? "Trains" : "Experiences"}
+            Search {searchData.transportMode === "all" ? "All" :
+              searchData.transportMode === "flight" ? "Flights" :
+                searchData.transportMode === "hotel" ? "Hotels" :
+                  searchData.transportMode === "bus" ? "Buses" :
+                    searchData.transportMode === "train" ? "Trains" : "Experiences"}
           </span>
         </button>
       </form >
