@@ -21,6 +21,7 @@ const envConfig = {
     HOTELS_BPP_URL: process.env.HOTELS_BPP_URL || 'http://127.0.0.1:7003',
     BUSES_BPP_URL: process.env.BUSES_BPP_URL || 'http://127.0.0.1:3004',
     TRAINS_BPP_URL: process.env.TRAINS_BPP_URL || 'http://127.0.0.1:3005',
+    EXPERIENCES_BPP_URL: process.env.EXPERIENCES_BPP_URL || 'http://127.0.0.1:3006',
 
     // Legacy Amadeus Configuration (for backward compatibility)
     AMADEUS_CLIENT_ID: process.env.AMADEUS_CLIENT_ID,

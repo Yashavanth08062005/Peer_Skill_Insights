@@ -19,6 +19,7 @@ class BecknService {
         this.hotelsBppUrl = env.HOTELS_BPP_URL || 'http://127.0.0.1:7003';
         this.busesBppUrl = env.BUSES_BPP_URL || 'http://127.0.0.1:3004';
         this.trainsBppUrl = env.TRAINS_BPP_URL || 'http://127.0.0.1:3005';
+        this.experiencesBppUrl = env.EXPERIENCES_BPP_URL || 'http://127.0.0.1:3006';
     }
 
     /**
@@ -56,7 +57,10 @@ class BecknService {
                         fulfillment: {
                             start: {
                                 location: {
-                                    gps: message.intent?.fulfillment?.start?.location?.gps || "12.9716,77.5946"
+                                    gps: message.intent?.fulfillment?.start?.location?.gps || "12.9716,77.5946",
+                                    address: {
+                                        city: message.intent?.fulfillment?.start?.location?.city?.name || "Bangalore"
+                                    }
                                 }
                             },
                             end: {
@@ -96,8 +100,16 @@ class BecknService {
 
             // Route request based on category
             const categoryId = message.intent?.category?.id || '';
+            logger.info('🔍 BecknService processSearch - Category extraction:', {
+                categoryId,
+                fullIntent: JSON.stringify(message.intent || {}).substring(0, 200)
+            });
+
             const isMobility = String(categoryId).toUpperCase() === 'MOBILITY';
             const isHospitality = String(categoryId).toUpperCase() === 'HOSPITALITY';
+            const isExperience = String(categoryId).toUpperCase() === 'EXPERIENCE';
+
+            logger.info('🔍 BecknService processSearch - Routing logic:', { isMobility, isHospitality, isExperience });
 
             if (isMobility) {
                 // Query primary flights BPP
@@ -150,6 +162,16 @@ class BecknService {
                     aggregated.message.catalog.providers.push(...hotelsProviders);
                 } catch (err) {
                     logger.error('Error fetching from hotels BPP', { error: err.message });
+                }
+            } else if (isExperience) {
+                // Query experiences BPP
+                try {
+                    const experiencesRes = await this.sendToBPP(this.experiencesBppUrl, '/search', becknRequest);
+                    const experiencesProviders = experiencesRes.data?.message?.catalog?.providers || [];
+                    logger.info('Experiences BPP response providers:', { count: experiencesProviders.length });
+                    aggregated.message.catalog.providers.push(...experiencesProviders);
+                } catch (err) {
+                    logger.error('Error fetching from experiences BPP', { error: err.message });
                 }
             }
 
@@ -262,6 +284,9 @@ class BecknService {
             } else if (itemCategory.toLowerCase().includes('train')) {
                 bppUrl = this.trainsBppUrl;
                 serviceType = 'Trains BPP';
+            } else if (itemCategory.toLowerCase().includes('experience') || itemCategory.toLowerCase().includes('activity') || itemCategory.toLowerCase().includes('tour')) {
+                bppUrl = this.experiencesBppUrl;
+                serviceType = 'Experiences BPP';
             } else {
                 // Default to flights BPP if category is unclear
                 bppUrl = this.flightsBppUrl;

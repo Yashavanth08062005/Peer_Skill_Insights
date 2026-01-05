@@ -106,6 +106,16 @@ const PaymentSuccess = () => {
                 departureTime = item.details?.departureTime || item.departure_time || item.time?.range?.start || item.timings?.departure || departureTime;
                 arrivalTime = item.details?.arrivalTime || item.arrival_time || item.time?.range?.end || item.timings?.arrival || arrivalTime;
 
+            } else if (type === 'experience') {
+                itemName = item.details?.title || item.details?.name || item.descriptor?.name || item.descriptor?.code || itemName;
+                itemCode = item.id || item.descriptor?.code || itemCode;
+                origin = null; // Experiences don't have an origin
+                destination = item.details?.location || item.details?.address || item.city || item.location_id || destination;
+
+                // Experience time handling
+                departureTime = item.time?.range?.start || item.time?.timestamp || item.volume?.start_time || departureTime;
+                arrivalTime = item.time?.range?.end || item.volume?.end_time || arrivalTime;
+
             } else if (type === 'train') {
                 // Train specific mappings
                 itemName = item.details?.trainName || item.details?.name || item.train_name || item.trainName || itemName;
@@ -190,6 +200,13 @@ const PaymentSuccess = () => {
                         if (!item.details) item.details = {};
                         item.details.checkOut = searchContext.checkOutDate;
                     }
+                }
+
+                // FIX: Use User's Selected Date for Experiences
+                if (type === 'experience' && searchContext.travelDate) {
+                    departureTime = searchContext.travelDate;
+                    if (!item.details) item.details = {};
+                    item.details.departureTime = searchContext.travelDate;
                 }
             }
 

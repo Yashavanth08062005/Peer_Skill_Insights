@@ -53,6 +53,7 @@ const SearchForm = ({ prefill }) => {
           { label: "Hotels", mode: "hotel" },
           { label: "Buses", mode: "bus" },
           { label: "Trains", mode: "train" },
+          { label: "Experiences", mode: "experience" },
         ].map((tab, i) => (
           <button
             key={i}
@@ -123,6 +124,57 @@ const SearchForm = ({ prefill }) => {
                   {[1, 2, 3, 4, 5, 6].map((num) => (
                     <option key={num} value={num}>
                       {num} {num === 1 ? "Passenger" : "Passengers"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        ) : searchData.transportMode === "experience" ? (
+          /* Experience Search Fields */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <AutoCompleteInput
+              label="City"
+              name="cityCode"
+              value={searchData.cityCode}
+              onChange={handleChange}
+              placeholder="Where to?"
+            />
+
+            {/* Date */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="date"
+                  name="travelDate"
+                  value={searchData.travelDate}
+                  onChange={handleChange}
+                  className="input-field pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Guests */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Guests
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <select
+                  name="passengers"
+                  value={searchData.passengers}
+                  onChange={handleChange}
+                  className="input-field pl-10"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <option key={num} value={num}>
+                      {num} Guest{num > 1 ? "s" : ""}
                     </option>
                   ))}
                 </select>
@@ -209,7 +261,8 @@ const SearchForm = ({ prefill }) => {
               </div>
             </div>
           </div>
-        )}
+        )
+        }
 
         <button
           type="submit"
@@ -217,11 +270,14 @@ const SearchForm = ({ prefill }) => {
         >
           <Search className="h-5 w-5" />
           <span>
-            Search {searchData.transportMode === "flight" ? "Flights" : searchData.transportMode === "hotel" ? "Hotels" : searchData.transportMode === "bus" ? "Buses" : "Trains"}
+            Search {searchData.transportMode === "flight" ? "Flights" :
+              searchData.transportMode === "hotel" ? "Hotels" :
+                searchData.transportMode === "bus" ? "Buses" :
+                  searchData.transportMode === "train" ? "Trains" : "Experiences"}
           </span>
         </button>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 };
 

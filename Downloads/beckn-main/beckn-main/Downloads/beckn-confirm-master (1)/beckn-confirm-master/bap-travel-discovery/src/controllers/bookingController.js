@@ -70,16 +70,23 @@ class BookingController {
                 RETURNING *
             `;
 
+            // Truncate fields to match DB constraints (varchar(10))
+            const truncatedOrigin = origin ? origin.substring(0, 10) : null;
+            const truncatedDestination = destination ? destination.substring(0, 10) : null;
+
+            if (origin && origin.length > 10) logger.warn(`Truncating origin from '${origin}' to '${truncatedOrigin}'`);
+            if (destination && destination.length > 10) logger.warn(`Truncating destination from '${destination}' to '${truncatedDestination}'`);
+
             const values = [
                 booking_reference, user_id, booking_type, item_id, provider_id,
-                item_name, item_code, origin, destination, departure_time, arrival_time,
+                item_name, item_code, truncatedOrigin, truncatedDestination, departure_time, arrival_time,
                 check_in_date, check_out_date, passenger_name, passenger_email, passenger_phone,
                 passenger_gender, date_of_birth, nationality, passport_number,
                 address_line1, address_line2, city, state, postal_code, country,
                 transaction_id, payment_method, payment_status, amount, currency,
                 booking_status, beckn_transaction_id, beckn_message_id, order_id,
                 JSON.stringify(item_details), JSON.stringify(booking_metadata)
-            ];
+            ].map(v => v === undefined ? null : v);
 
             const result = await db.query(query, values);
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import TravelCard from "../components/TravelCard";
 import HotelCard from "../components/HotelCard";
+import ExperienceCard from "../components/ExperienceCard";
 import FilterSidebar from "../components/FilterSidebar";
 import { searchTravelOptions } from "../services/api";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -56,7 +57,10 @@ const SearchResults = () => {
     const hasHotelParams =
       searchParams.get("cityCode") && searchParams.get("checkInDate");
 
-    if (hasFlightParams || hasHotelParams) {
+    const hasExperienceParams =
+      searchParams.get("cityCode") || (searchParams.get("origin") && searchParams.get("destination"));
+
+    if (hasFlightParams || hasHotelParams || hasExperienceParams) {
       fetchResults();
     }
   }, [searchParams]);
@@ -195,6 +199,11 @@ const SearchResults = () => {
                           rooms: searchParams.get("rooms"),
                           passengers: searchParams.get("passengers")
                         }}
+                      />
+                    ) : option.travelMode === "experience" ? (
+                      <ExperienceCard
+                        key={option.id || index}
+                        option={option}
                       />
                     ) : (
                       <TravelCard

@@ -1,15 +1,13 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, Plane, User, MapPin, Phone, Mail, Calendar, Download, Train, Bus, Hotel } from 'lucide-react';
+import { CheckCircle, Plane, User, MapPin, Phone, Mail, Calendar, Download, Train, Bus, Hotel, Ticket } from 'lucide-react';
 
 const BookingConfirmation = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-
-
     const { booking, flight, passenger, type } = location.state || {}; // flight contains the item/option details
     // Fallback type if passed explicitly, or try to guess from details
-    const bookingType = type || (flight?.travelMode) || (flight?.details?.trainName ? 'train' : flight?.details?.hotelName ? 'hotel' : 'flight');
+    const bookingType = type || (flight?.travelMode) || (flight?.details?.trainName ? 'train' : flight?.details?.hotelName ? 'hotel' : flight?.details?.type === 'Activity' ? 'experience' : 'flight');
 
     if (!booking || !flight || !passenger) {
         return (
@@ -33,11 +31,15 @@ const BookingConfirmation = () => {
         if (bookingType === 'train') return <Train className="h-6 w-6 mr-2 text-green-600" />;
         if (bookingType === 'bus') return <Bus className="h-6 w-6 mr-2 text-orange-600" />;
         if (bookingType === 'hotel') return <Hotel className="h-6 w-6 mr-2 text-purple-600" />;
+        if (bookingType === 'experience') return <Ticket className="h-6 w-6 mr-2 text-pink-600" />;
         return <Plane className="h-6 w-6 mr-2 text-blue-600" />;
     };
 
     const formatDuration = (val) => {
         const dur = val || 'N/A';
+        // Check if duration is already formatted string like "2 hours"
+        if (isNaN(dur) && typeof dur === 'string') return dur;
+
         const mins = parseInt(dur);
         if (!isNaN(mins)) {
             const h = Math.floor(mins / 60);
@@ -57,7 +59,7 @@ const BookingConfirmation = () => {
                         Booking Confirmed!
                     </h1>
                     <p className="text-gray-600 mb-4">
-                        Your {bookingType === 'train' ? 'train' : bookingType === 'bus' ? 'bus' : bookingType === 'hotel' ? 'hotel' : 'flight'} has been successfully booked
+                        Your {bookingType === 'train' ? 'train' : bookingType === 'bus' ? 'bus' : bookingType === 'hotel' ? 'hotel' : bookingType === 'experience' ? 'experience' : 'flight'} has been successfully booked
                     </p>
                     <div className="inline-block bg-blue-50 px-6 py-3 rounded-lg">
                         <p className="text-sm text-gray-600">Booking Reference</p>
@@ -65,34 +67,38 @@ const BookingConfirmation = () => {
                     </div>
                 </div>
 
-                {/* Flight Details */}
+                {/* Details Section */}
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                         {renderModeIcon()}
-                        {bookingType === 'train' ? 'Train Details' : bookingType === 'bus' ? 'Bus Details' : bookingType === 'hotel' ? 'Hotel Details' : 'Flight Details'}
+                        {bookingType === 'train' ? 'Train Details' : bookingType === 'bus' ? 'Bus Details' : bookingType === 'hotel' ? 'Hotel Details' : bookingType === 'experience' ? 'Experience Details' : 'Flight Details'}
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <p className="text-sm text-gray-500">
-                                {bookingType === 'train' ? 'Train Name' : bookingType === 'bus' ? 'Operator' : bookingType === 'hotel' ? 'Hotel Name' : 'Airline'}
+                                {bookingType === 'train' ? 'Train Name' : bookingType === 'bus' ? 'Operator' : bookingType === 'hotel' ? 'Hotel Name' : bookingType === 'experience' ? 'Activity Name' : 'Airline'}
                             </p>
                             <p className="text-lg font-semibold text-gray-900">
                                 {flight.details?.trainName || flight.details?.operator || flight.details?.hotelName || flight.details?.name || flight.details?.airline || flight.descriptor?.name || 'Carrier'}
                             </p>
                             <p className="text-sm text-gray-600">
-                                {bookingType === 'train' ? `Train ${flight.details?.trainNumber || ''}` : bookingType === 'bus' ? `Bus ${flight.details?.busNumber || ''}` : bookingType === 'hotel' ? '' : `Flight ${flight.details?.flightNumber || flight.descriptor?.code || 'N/A'}`}
+                                {bookingType === 'train' ? `Train ${flight.details?.trainNumber || ''}` :
+                                    bookingType === 'bus' ? `Bus ${flight.details?.busNumber || ''}` :
+                                        bookingType === 'hotel' ? '' :
+                                            bookingType === 'experience' ? (flight.details?.type || 'Activity') : `Flight ${flight.details?.flightNumber || flight.descriptor?.code || 'N/A'}`}
                             </p>
                         </div>
 
                         <div>
-                            <p className="text-sm text-gray-500">{bookingType === 'hotel' ? 'Location' : 'Route'}</p>
+                            <p className="text-sm text-gray-500">{bookingType === 'hotel' || bookingType === 'experience' ? 'Location' : 'Route'}</p>
                             <p className="text-lg font-semibold text-gray-900">
-                                {bookingType === 'hotel'
+                                {bookingType === 'hotel' || bookingType === 'experience'
                                     ? (
                                         typeof flight.details?.address === 'string' ? flight.details.address :
                                             flight.details?.address?.street || flight.details?.address?.city ||
-                                            flight.details?.city || flight.details?.location_id || 'Hotel Location'
+                                            flight.details?.city || flight.details?.location || flight.details?.location_id ||
+                                            flight.city || 'Location'
                                     )
                                     : (
                                         <>
@@ -104,7 +110,7 @@ const BookingConfirmation = () => {
                                 }
                             </p>
                             <p className="text-xs text-gray-500">
-                                {bookingType !== 'hotel' && flight.details?.originCity && flight.details?.destinationCity && !location.state?.searchContext &&
+                                {bookingType !== 'hotel' && bookingType !== 'experience' && flight.details?.originCity && flight.details?.destinationCity && !location.state?.searchContext &&
                                     `${flight.details.originCity} to ${flight.details.destinationCity}`
                                 }
                             </p>
@@ -114,7 +120,7 @@ const BookingConfirmation = () => {
                             <div>
                                 <p className="text-sm text-gray-500">Duration</p>
                                 <p className="text-lg font-semibold text-gray-900">
-                                    {formatDuration(flight.details?.duration)}
+                                    {formatDuration(flight.details?.duration || flight.duration)}
                                 </p>
                             </div>
                         )}
@@ -168,8 +174,21 @@ const BookingConfirmation = () => {
                     </div>
 
                     <div className="mt-6 pt-6 border-t">
-                        <p className="text-sm text-gray-500 mb-2">Flight Information</p>
+                        <p className="text-sm text-gray-500 mb-2">{bookingType === 'experience' ? 'Experience Information' : 'Flight Information'}</p>
                         <div className="flex flex-wrap gap-2">
+                            {bookingType === 'experience' && (
+                                <>
+                                    <span className="bg-pink-50 text-pink-700 px-3 py-1 rounded-full text-sm">
+                                        Type: {flight.details?.type || 'Activity'}
+                                    </span>
+                                    {flight.details?.rating && (
+                                        <span className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm">
+                                            msg: ⭐ {flight.details.rating}
+                                        </span>
+                                    )}
+                                </>
+                            )}
+
                             {flight.details?.cabinClass && (
                                 <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
                                     Class: {flight.details.cabinClass}
@@ -198,7 +217,7 @@ const BookingConfirmation = () => {
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                         <User className="h-6 w-6 mr-2 text-blue-600" />
-                        Passenger Details
+                        Passenger/Guest Details
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -300,6 +319,13 @@ const BookingConfirmation = () => {
                                 <li>• Please carry a valid government-issued photo ID for all guests</li>
                                 <li>• Early check-in or late check-out is subject to availability</li>
                                 <li>• Married couples may need to present proof of marriage</li>
+                            </>
+                        ) : bookingType === 'experience' ? (
+                            <>
+                                <li>• Please arrive at the meeting point 15 minutes before the scheduled time</li>
+                                <li>• Wear comfortable clothing and footwear</li>
+                                <li>• Carry a valid photo ID and confirmation email</li>
+                                <li>• In case of weather disruptions, check with the organizer</li>
                             </>
                         ) : (
                             <>

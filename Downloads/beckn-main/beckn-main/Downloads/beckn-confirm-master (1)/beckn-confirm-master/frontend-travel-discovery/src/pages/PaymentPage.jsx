@@ -262,6 +262,16 @@ const PaymentPage = () => {
                     departureTime = item.details?.departureTime || item.departure_time || item.time?.range?.start || item.timings?.departure || departureTime;
                     arrivalTime = item.details?.arrivalTime || item.arrival_time || item.time?.range?.end || item.timings?.arrival || arrivalTime;
 
+                } else if (type === 'experience') {
+                    itemName = item.details?.title || item.details?.name || item.descriptor?.name || item.descriptor?.code || itemName;
+                    itemCode = item.id || item.descriptor?.code || itemCode;
+                    origin = null; // Experiences don't have an origin in the travel sense
+                    destination = item.details?.location || item.details?.address || item.city || item.location_id || destination;
+
+                    // Experience time handling
+                    departureTime = item.time?.range?.start || item.time?.timestamp || item.volume?.start_time || departureTime;
+                    arrivalTime = item.time?.range?.end || item.volume?.end_time || arrivalTime;
+
                 } else if (type === 'train') {
                     itemName = item.details?.trainName || item.details?.name || item.train_name || item.trainName || itemName;
                     itemCode = item.details?.trainNumber || item.train_number || itemCode;
@@ -358,6 +368,7 @@ const PaymentPage = () => {
                     if (searchContext.origin) bookingPayload.origin = searchContext.origin;
                     if (searchContext.destination) bookingPayload.destination = searchContext.destination;
 
+
                     // FIX: Use User's Selected Dates for Hotels
                     if (type === 'hotel') {
                         if (searchContext.checkInDate) {
@@ -374,6 +385,15 @@ const PaymentPage = () => {
                             if (!item.details) item.details = {};
                             item.details.checkOut = searchContext.checkOutDate;
                         }
+                    }
+
+                    // FIX: Use User's Selected Date for Experiences
+                    if (type === 'experience' && searchContext.travelDate) {
+                        bookingPayload.departure_time = searchContext.travelDate;
+                        // For arrival/end time, if we successfully parsed duration (e.g. "3 hours"), we could calculate it.
+                        // For now, we just set start time which is the most critical.
+                        if (!item.details) item.details = {};
+                        item.details.departureTime = searchContext.travelDate;
                     }
 
                     console.log('✨ Applied User Search Context:', searchContext);

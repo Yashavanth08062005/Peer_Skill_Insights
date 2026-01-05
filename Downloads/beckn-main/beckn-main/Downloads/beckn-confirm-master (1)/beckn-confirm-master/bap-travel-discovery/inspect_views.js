@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+
 const pool = new Pool({
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
@@ -10,16 +11,13 @@ const pool = new Pool({
 (async () => {
     try {
         const res = await pool.query(`
-            SELECT column_name, data_type, is_nullable, character_maximum_length
-            FROM information_schema.columns
-            WHERE table_name = 'bookings'
-            ORDER BY ordinal_position;
+            SELECT table_name, view_definition
+            FROM information_schema.views
+            WHERE table_schema = 'public';
         `);
-        const fs = require('fs');
-        fs.writeFileSync('schema_output.json', JSON.stringify(res.rows, null, 2));
-        console.log('Schema written to schema_output.json');
+        console.log('Views:', JSON.stringify(res.rows, null, 2));
     } catch (err) {
-        console.error('Error identifying schema:', err);
+        console.error('Error fetching views:', err);
     } finally {
         await pool.end();
     }

@@ -160,9 +160,12 @@ export const searchTravelOptions = async (searchData) => {
     // Extract items from Beckn catalog response
     const catalog = response.data?.message?.catalog;
     if (!catalog || !catalog.providers) {
-      console.warn('⚠️ No providers found in catalog');
+      console.warn('⚠️ No providers found in catalog', response.data);
       return [];
     }
+
+    console.log('📦 Providers found:', catalog.providers.length);
+    console.log('📦 First provider items:', catalog.providers[0]?.items);
 
     // Transform Beckn items to frontend format
     const items = [];
@@ -183,11 +186,18 @@ export const searchTravelOptions = async (searchData) => {
             shouldInclude = item.category_id === 'FLIGHT' || !item.category_id;
           } else if (searchData.transportMode === 'train') {
             // Include only if category is explicitly TRAIN
+          } else if (searchData.transportMode === 'train') {
+            // Include only if category is explicitly TRAIN
             shouldInclude = item.category_id === 'TRAIN';
+          } else if (searchData.transportMode === 'experience') {
+            shouldInclude = item.category_id === 'EXPERIENCE';
           }
 
           if (shouldInclude) {
+            console.log('✅ Including item:', item.id, item.category_id);
             items.push(transformBecknItem(item, provider, searchData.transportMode));
+          } else {
+            console.log('❌ Excluding item:', item.id, item.category_id, 'Mode:', searchData.transportMode);
           }
         });
       }
@@ -234,7 +244,8 @@ export const searchTravelOptions = async (searchData) => {
 const createSearchIntent = (searchData) => {
   const intent = {
     category: {
-      id: (searchData.transportMode === 'flight' || searchData.transportMode === 'bus' || searchData.transportMode === 'train') ? 'MOBILITY' : 'HOSPITALITY'
+      id: (searchData.transportMode === 'flight' || searchData.transportMode === 'bus' || searchData.transportMode === 'train') ? 'MOBILITY' :
+        (searchData.transportMode === 'experience' ? 'EXPERIENCE' : 'HOSPITALITY')
     }
   };
 
@@ -299,6 +310,28 @@ const createSearchIntent = (searchData) => {
         range: {
           start: new Date(travelDate + 'T00:00:00').toISOString(),
           end: new Date(travelDate + 'T23:59:59').toISOString()
+        }
+      }
+    };
+  } else if (searchData.transportMode === 'experience') {
+    const travelDate = searchData.travelDate || new Date().toISOString().split('T')[0];
+    intent.fulfillment = {
+      start: {
+        location: {
+          city: {
+            name: searchData.cityCode || searchData.destination || "Bangalore"
+          }
+        }
+      },
+      end: {
+        location: {
+          gps: getCityGps(searchData.cityCode || searchData.destination)
+        }
+      },
+      time: {
+        range: {
+          start: new Date(travelDate + 'T09:00:00').toISOString(),
+          end: new Date(travelDate + 'T18:00:00').toISOString()
         }
       }
     };
@@ -497,6 +530,21 @@ const transformBecknItem = (item, provider, transportMode) => {
         arrival: new Date(new Date(item.time?.timestamp || Date.now()).getTime() +
           // Parse duration "300 mins" from tag or default 4 hours
           (parseInt(getTagValue(item.tags, 'ROUTE', 'DURATION')) || 240) * 60000).toISOString()
+      }
+    };
+  } else if (transportMode === 'experience') {
+    return {
+      ...baseItem,
+      details: {
+        name: item.descriptor?.name,
+        shortDesc: item.descriptor?.short_desc,
+        longDesc: item.descriptor?.long_desc,
+        images: item.descriptor?.images?.map(img => img.url) || [],
+        duration: item.time?.duration,
+        rating: getTagValue(item.tags, 'DETAILS', 'RATING'),
+        type: getTagValue(item.tags, 'DETAILS', 'TYPE'),
+        location: getTagValue(item.tags, 'LOCATION', 'AREA'),
+        city: getTagValue(item.tags, 'LOCATION', 'CITY')
       }
     };
   }
