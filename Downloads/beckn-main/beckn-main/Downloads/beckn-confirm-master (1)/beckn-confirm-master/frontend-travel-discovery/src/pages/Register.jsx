@@ -11,10 +11,20 @@ const Register = () => {
         full_name: '',
         phone: ''
     });
-    const [error, setError] = useState('');
+
+    // Validation states
+    const [errors, setErrors] = useState({
+        full_name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: ''
+    });
+
+    const [generalError, setGeneralError] = useState('');
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
-    
+
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -23,20 +33,107 @@ const Register = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+
+        // Clear specific error when user types
+        if (errors[e.target.name]) {
+            setErrors({
+                ...errors,
+                [e.target.name]: ''
+            });
+        }
+    };
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target;
+        let error = '';
+
+        switch (name) {
+            case 'full_name':
+                if (!value.trim()) error = 'Full Name is required';
+                break;
+            case 'email':
+                if (!value) error = 'Email is required';
+                else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = 'Please enter a valid email address';
+                break;
+            case 'phone':
+                if (value && !/^\d{10}$/.test(value.replace(/[^0-9]/g, ''))) error = 'Please enter a valid 10-digit phone number';
+                break;
+            case 'password':
+                if (!value) error = 'Password is required';
+                else if (value.length < 6) error = 'Password must be at least 6 characters';
+                break;
+            case 'confirmPassword':
+                if (value && value !== formData.password) error = 'Passwords do not match';
+                break;
+            default:
+                break;
+        }
+
+        if (error) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: error
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        let isValid = true;
+        const newErrors = {
+            full_name: '',
+            email: '',
+            phone: '',
+            password: '',
+            confirmPassword: ''
+        };
+
+        // Name validation
+        if (!formData.full_name.trim()) {
+            newErrors.full_name = 'Full Name is required';
+            isValid = false;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email) {
+            newErrors.email = 'Email is required';
+            isValid = false;
+        } else if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+            isValid = false;
+        }
+
+        // Phone validation
+        const phoneRegex = /^\d{10}$/;
+        if (formData.phone && !phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+            newErrors.phone = 'Please enter a valid 10-digit phone number';
+            isValid = false;
+        }
+
+        // Password validation
+        if (!formData.password) {
+            newErrors.password = 'Password is required';
+            isValid = false;
+        } else if (formData.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+            isValid = false;
+        }
+
+        // Confirm Password validation
+        if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setGeneralError('');
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters');
+        if (!validateForm()) {
             return;
         }
 
@@ -48,21 +145,18 @@ const Register = () => {
             full_name: formData.full_name,
             phone: formData.phone
         });
-        
+
         if (result.success) {
-            // Show success message
             setSuccess(true);
-            // Redirect to login after 2 seconds
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
         } else {
-            setError(result.error);
+            setGeneralError(result.error);
             setLoading(false);
         }
     };
 
-    // Show success message
     if (success) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -93,11 +187,14 @@ const Register = () => {
                         Join us to start booking
                     </p>
                 </div>
-                
+
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                            {error}
+                    {generalError && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {generalError}
                         </div>
                     )}
 
@@ -110,12 +207,18 @@ const Register = () => {
                                 id="full_name"
                                 name="full_name"
                                 type="text"
-                                required
                                 value={formData.full_name}
                                 onChange={handleChange}
-                                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.full_name ? 'border-red-300 ring-red-200' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all`}
                                 placeholder="Enter your full name"
+                                onBlur={handleBlur}
                             />
+                            {errors.full_name && (
+                                <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
+                                    <span className="mr-1">⚠️</span> {errors.full_name}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -126,12 +229,18 @@ const Register = () => {
                                 id="email"
                                 name="email"
                                 type="email"
-                                required
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.email ? 'border-red-300 ring-red-200' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all`}
                                 placeholder="Enter your email"
+                                onBlur={handleBlur}
                             />
+                            {errors.email && (
+                                <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
+                                    <span className="mr-1">⚠️</span> {errors.email}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -144,9 +253,16 @@ const Register = () => {
                                 type="tel"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.phone ? 'border-red-300 ring-red-200' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all`}
                                 placeholder="Enter your phone number"
+                                onBlur={handleBlur}
                             />
+                            {errors.phone && (
+                                <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
+                                    <span className="mr-1">⚠️</span> {errors.phone}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -157,12 +273,18 @@ const Register = () => {
                                 id="password"
                                 name="password"
                                 type="password"
-                                required
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.password ? 'border-red-300 ring-red-200' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all`}
                                 placeholder="Create a password"
+                                onBlur={handleBlur}
                             />
+                            {errors.password && (
+                                <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
+                                    <span className="mr-1">⚠️</span> {errors.password}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -173,12 +295,18 @@ const Register = () => {
                                 id="confirmPassword"
                                 name="confirmPassword"
                                 type="password"
-                                required
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
-                                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-300 ring-red-200' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all`}
                                 placeholder="Confirm your password"
+                                onBlur={handleBlur}
                             />
+                            {errors.confirmPassword && (
+                                <p className="mt-1 text-xs text-red-600 font-medium flex items-center">
+                                    <span className="mr-1">⚠️</span> {errors.confirmPassword}
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -186,16 +314,24 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
                         >
-                            {loading ? 'Creating account...' : 'Create Account'}
+                            {loading ? (
+                                <span className="flex items-center">
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Creating account...
+                                </span>
+                            ) : 'Create Account'}
                         </button>
                     </div>
 
                     <div className="text-center">
                         <p className="text-sm text-gray-600">
                             Already have an account?{' '}
-                            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
                                 Sign in
                             </Link>
                         </p>
