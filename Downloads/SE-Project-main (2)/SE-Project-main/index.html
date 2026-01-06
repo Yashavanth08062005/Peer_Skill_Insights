@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Peer Skill Insights</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app">
+    <!-- Top horizontal nav -->
+    <header class="topbar-main">
+      <div class="brand">
+        <img src="" alt="logo" id="brandAvatar" class="logo" />
+        <h1>Peer Skill Insights</h1>
+      </div>
+
+      <nav class="nav">
+        <button data-page="dashboard" class="nav-btn active">Dashboard</button>
+        <button data-page="myskills" class="nav-btn">My Skills</button>
+        <button data-page="skillgap" class="nav-btn">Skill Gap</button>
+        <button data-page="peers" class="nav-btn">Peers</button>
+        <button data-page="internships" class="nav-btn">Internships</button>
+        <button data-page="resources" class="nav-btn">Resource Recommendations</button>
+        <button data-page="profile" class="nav-btn">Profile</button>
+        <button id="logoutBtn" class="nav-btn"
+          style="margin-left:auto; background:rgba(255,255,255,0.1)">Logout</button>
+      </nav>
+
+      <!-- removed extra Resources button per request -->
+    </header>
+
+    <main class="main">
+      <section id="pages">
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="page active">
+          <h2>Dashboard</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Trending Skills</h3>
+              <canvas id="trendingChart"></canvas>
+            </div>
+
+            <!-- Removed Timeline Chart -->
+
+            <div class="card">
+              <h3>Top Companies (Internships)</h3>
+              <canvas id="companyChart"></canvas>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- My Skills -->
+        <section id="myskills" class="page">
+          <h2>My Skills</h2>
+          <div class="split">
+            <div class="card">
+              <h3>Your Profile</h3>
+
+              <div id="mySkillsProfileBox" style="display:flex;align-items:center;gap:16px;">
+                <img id="mySkillsPfp" class="pfp" src="" alt="profile photo" />
+
+                <div>
+                  <div><strong id="mySkillsName"></strong></div>
+                  <div id="mySkillsMeta" class="muted" style="font-size:13px"></div>
+                  <div id="mySkillsCompany"
+                    style="font-size:13px; font-weight:600; margin-top:2px; color:var(--primary)"></div>
+
+                  <div style="margin-top:10px;display:flex;gap:8px;">
+                    <button id="mySkillsChangePhoto" type="button" class="action secondary">Change Photo</button>
+                    <button id="mySkillsRemovePhoto" type="button" class="action secondary">Remove</button>
+                  </div>
+
+                  <input type="file" id="mySkillsPhotoInput" accept="image/*" style="display:none;">
+                </div>
+              </div>
+
+              <div style="margin-top:16px; border-top:1px solid #eee; padding-top:12px;">
+                <label style="font-size:13px; font-weight:600;">My Company / Internship</label>
+                <div style="display:flex; gap:8px; margin-top:4px;">
+                  <input id="myCompanyInput" placeholder="e.g. Google" style="flex:1" />
+                  <button id="saveCompanyBtn" class="action secondary">Update</button>
+                  <button id="removeCompanyBtn" class="action secondary" style="color:red; border-color:red;">X</button>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="card">
+              <h3>Add / Remove Skills</h3>
+              <form id="skillForm" onsubmit="return false;">
+                <input id="skillInput" placeholder="e.g. Python" />
+                <button id="addSkillBtn" class="action">Add Skill</button>
+              </form>
+              <div>
+                <h4>Your skills</h4>
+                <ul id="mySkillsList" class="tag-list"></ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Skill Gap -->
+        <section id="skillgap" class="page">
+          <h2>Skill Gap Analysis</h2>
+          <div class="card">
+            <h3>Skills peers have that you don't</h3>
+            <div id="gapChips" class="gap-chips"></div>
+          </div>
+          <div class="card">
+            <h3>Detailed Comparison</h3>
+            <table id="compareTable">
+              <thead>
+                <tr>
+                  <th>Skill</th>
+                  <th>Peer Count</th>
+                  <th>You have it?</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Peers -->
+        <section id="peers" class="page">
+          <h2>Peer Insights</h2>
+          <div class="card">
+            <div class="card">
+              <h3>Add Peer Entry (from Database)</h3>
+              <form id="peerForm" onsubmit="return false;">
+                <input id="peerEmailInput" placeholder="Enter Peer Email (e.g. 01fe...@kletech.ac.in)" />
+                <div style="margin-top:8px">
+                  <button id="addPeerBtn" class="action">Add Peer</button>
+                </div>
+                <div class="small" style="margin-top:6px">Tip: Enter the email of a registered user to add them to your
+                  peer list. Their company and skills will be fetched automatically.</div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Peer List</h3>
+            <div id="peerList"></div>
+          </div>
+        </section>
+
+        <!-- Internships -->
+        <section id="internships" class="page">
+          <h2>Internship Trends</h2>
+          <div class="card">
+            <h3 id="internshipChartTitle">Company Internship Distribution</h3>
+            <div class="small-donut-wrapper">
+              <canvas id="domainChart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Company list (from peer entries)</h3>
+            <div id="companyList"></div>
+          </div>
+        </section>
+
+        <!-- Resource Recommendations -->
+        <section id="resources" class="page">
+          <h2>Resource Recommendations</h2>
+
+          <div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <input id="resourceSearch" placeholder="Search resources, skill, peer, note..." style="flex:1" />
+            <select id="filterSkill">
+              <option value="">All Skills</option>
+            </select>
+            <select id="filterPeer">
+              <option value="">All Peers</option>
+            </select>
+            <button id="resetFilters" class="action secondary">Reset</button>
+          </div>
+
+          <div class="grid resource-grid" id="resourceGrid" style="margin-top:12px">
+            <!-- resources injected by JS -->
+          </div>
+        </section>
+
+        <!-- Profile -->
+        <section id="profile" class="page">
+          <h2>Profile</h2>
+          <div class="card">
+            <h3>Set Your Profile (persistent)</h3>
+            <form id="profileForm" onsubmit="return false;">
+              <label>Name</label>
+              <input id="nameInput" placeholder="Your name" />
+              <label>Year / Branch</label>
+              <input id="metaInput" placeholder="e.g. 3rd Year - CSE" />
+              <label>Upload Profile Picture</label>
+              <input id="avatarInput" type="file" accept="image/*" style="display:none" />
+              <div style="margin-top:10px">
+                <button id="saveProfileBtn" class="action">Save Profile</button>
+              </div>
+
+              <div id="avatarControls" style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                <button id="changeAvatarBtn" type="button" class="action secondary">Change Photo</button>
+                <button id="removeAvatarBtn" type="button" class="action secondary">Remove Photo</button>
+              </div>
+            </form>
+            <div id="profileMsg" class="muted"></div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- Auth Screen -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <h2 id="authTitle">Login</h2>
+      <form id="authForm" onsubmit="return false;">
+        <input id="authUsername" placeholder="Email" required />
+        <input id="authPassword" type="password" placeholder="Password" required />
+        <div style="margin-top:12px">
+          <button type="submit" class="action" style="width:100%">Submit</button>
+        </div>
+        <div class="auth-switch" id="authSwitch">Don't have an account? Register</div>
+        <div id="authMsg" class="auth-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Peer resource modal (hidden by default) -->
+  <div id="resourceModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <h3>Recommend a resource</h3>
+      <form id="resourceForm" onsubmit="return false;">
+        <input id="resPeerIndex" type="hidden" />
+        <label>Skill</label>
+        <select id="resSkill"></select>
+        <label>Title</label>
+        <input id="resTitle" placeholder="e.g. Deep Learning Crash Course" />
+        <label>URL</label>
+        <input id="resURL" placeholder="https://..." />
+        <label>Note (optional)</label>
+        <input id="resNote" placeholder="Short note" />
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="saveResourceBtn" class="action">Add Resource</button>
+          <button id="cancelResourceBtn" class="action secondary" type="button">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
