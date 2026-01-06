@@ -403,7 +403,7 @@
         return;
       }
 
-      state.peers.push({ name, skills, company });
+      state.peers.push({ name, skills, company, linkedId: data.id || null });
 
       try {
         await saveState();
@@ -456,11 +456,30 @@
         </div>
         <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px">
           <div style="display:flex; gap:8px;">
+            <button data-i="${i}" class="viewResourcesBtn action secondary">View Recommendations</button>
             <button data-i="${i}" class="removePeerBtn secondary">Remove</button>
           </div>
         </div>
       `;
       peerList.appendChild(div);
+    });
+
+    document.querySelectorAll(".viewResourcesBtn").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        const i = parseInt(ev.target.dataset.i, 10);
+        const p = state.peers[i];
+        if (p && p.name) {
+          // Switch to resources page and filter by this peer
+          populateFilters(); // ensure options exist
+          filterPeer.value = p.name;
+          filterSkill.value = "";
+          resourceSearch.value = "";
+          renderResources(); // This will re-populate but keep our value
+          showPage("resources");
+        } else {
+          alert("Cannot filter by this peer (missing name).");
+        }
+      });
     });
 
     // Removed recommendResourceBtn listeners from here as it's now global
@@ -649,8 +668,16 @@
       if (p.name) peersSet.add(p.name);
     });
 
+    // preserve active filters if possible
+    const activeSkill = filterSkill.value;
+    const activePeer = filterPeer.value;
+
     filterSkill.innerHTML = '<option value="">All Skills</option>' + Array.from(skillsSet).sort().map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
     filterPeer.innerHTML = '<option value="">All Peers</option>' + Array.from(peersSet).sort().map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+    // restore
+    if (activeSkill) filterSkill.value = activeSkill;
+    if (activePeer) filterPeer.value = activePeer;
   }
 
   function renderResources() {
@@ -662,7 +689,8 @@
     const list = (state.resources || []).slice().reverse().filter(r => {
       const sName = typeof r.skill === 'object' ? r.skill.skill : r.skill;
       if (skillF && sName !== skillF) return false;
-      if (peerF && r.author !== peerF) return false;
+      // Allow specific peer match OR "All" (peerIndex -1)
+      if (peerF && r.author !== peerF && r.author !== "All") return false;
       if (!q) return true;
       const hay = `${r.title} ${sName} ${r.author} ${r.note}`.toLowerCase();
       return hay.includes(q);
@@ -718,13 +746,7 @@
 
   // resource modal handlers
   globalRecommendBtn && globalRecommendBtn.addEventListener("click", () => {
-    // Populate Author Dropdown
-    if (!state.peers || state.peers.length === 0) {
-      alert("Please add at least one peer before recommending resources.");
-      return;
-    }
-
-    resAuthorIndex.innerHTML = "";
+    resAuthorIndex.innerHTML = `<option value="-1">All (Everyone)</option>`;
     state.peers.forEach((p, i) => {
       const opt = document.createElement("option");
       opt.value = i;
@@ -748,10 +770,6 @@
   });
 
   saveResourceBtn.addEventListener("click", () => {
-    const i = parseInt(resAuthorIndex.value, 10);
-    // resPeerIndex is no longer main source, but let's keep it synced or just use i
-    resPeerIndex.value = i;
-
     const title = resTitle.value.trim();
     const url = resURL.value.trim();
     const note = resNote.value.trim();
@@ -759,8 +777,19 @@
 
     if (!url) { alert("Please add a URL."); return; }
 
-    const author = (state.peers[i] && state.peers[i].name) ? state.peers[i].name : `Peer ${i + 1}`;
-    const resource = { title: title || url, url, note, skill, author, peerIndex: i, created: Date.now() };
+    const isMe = resAuthorIndex.value === "-1";
+    let author, peerIdxVal;
+
+    if (isMe) {
+      author = "All";
+      peerIdxVal = -1;
+    } else {
+      const i = parseInt(resAuthorIndex.value, 10);
+      author = (state.peers[i] && state.peers[i].name) ? state.peers[i].name : `Peer ${i + 1}`;
+      peerIdxVal = i;
+    }
+
+    const resource = { title: title || url, url, note, skill, author, peerIndex: peerIdxVal, created: Date.now() };
     state.resources = state.resources || [];
     state.resources.push(resource);
     saveState();

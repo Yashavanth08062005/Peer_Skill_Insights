@@ -129,8 +129,8 @@ app.post('/api/state/save', async (req, res) => {
         // save peers
         for (const peer of peers) {
             const peerRes = await db.query(
-                'INSERT INTO peers (user_id, name, company) VALUES ($1,$2,$3) RETURNING id',
-                [userId, peer.name, peer.company]
+                'INSERT INTO peers (user_id, name, company, linked_user_id) VALUES ($1,$2,$3,$4) RETURNING id',
+                [userId, peer.name, peer.company, peer.linkedId || null]
             );
             const peerId = peerRes.rows[0].id;
 
@@ -181,7 +181,7 @@ app.get('/api/state/:userId', async (req, res) => {
         );
 
         const peersRes = await db.query(
-            'SELECT * FROM peers WHERE user_id=$1',
+            'SELECT * FROM peers WHERE user_id=$1 ORDER BY id ASC',
             [userId]
         );
 
@@ -191,19 +191,64 @@ app.get('/api/state/:userId', async (req, res) => {
         );
 
         const peers = [];
+        const linkedIds = [];
+        const peerIdMap = new Map(); // Map linked_user_id -> peer array index
 
-        for (const peer of peersRes.rows) {
+        for (const [index, peer] of peersRes.rows.entries()) {
             const skillRes = await db.query(
                 'SELECT skill, company FROM peer_skills WHERE peer_id=$1',
                 [peer.id]
             );
 
+            if (peer.linked_user_id) {
+                linkedIds.push(peer.linked_user_id);
+                peerIdMap.set(peer.linked_user_id, index);
+            }
+
             peers.push({
                 name: peer.name,
                 company: peer.company,
                 skills: skillRes.rows, // object {skill, company}
+                linkedId: peer.linked_user_id
             });
         }
+
+        // Fetch resources from linked peers (MUTUAL ONLY)
+        let sharedResources = [];
+        if (linkedIds.length > 0) {
+            // Find which of these linkedIds ALSO have the current userId in their peer list
+            // i.e. Reciprocal connection: I follow them, AND they follow me.
+            const mutualRes = await db.query(
+                `SELECT user_id FROM peers WHERE user_id = ANY($1::int[]) AND linked_user_id = $2`,
+                [linkedIds, userId] // Check if peers (linkedIds) have ME (userId) as a linked friend
+            );
+
+            const mutualIds = mutualRes.rows.map(r => r.user_id);
+
+            if (mutualIds.length > 0) {
+                const sharedRes = await db.query(
+                    'SELECT user_id, skill, title, url, note, author FROM resources WHERE user_id = ANY($1::int[])',
+                    [mutualIds]
+                );
+                sharedResources = sharedRes.rows.map(r => ({
+                    skill: r.skill,
+                    title: r.title,
+                    url: r.url,
+                    note: r.note,
+                    author: r.author, // Keep original author name
+                    peerIndex: peerIdMap.get(r.user_id) // Map to local peer index
+                }));
+            }
+        }
+
+        const myResources = resourcesRes.rows.map(r => ({
+            skill: r.skill,
+            title: r.title,
+            url: r.url,
+            note: r.note,
+            author: r.author,
+            peerIndex: r.peer_index
+        }));
 
         res.json({
             profile: {
@@ -218,14 +263,7 @@ app.get('/api/state/:userId', async (req, res) => {
             },
             mySkills: skillsRes.rows, // Returns {skill, company} objects
             peers,
-            resources: resourcesRes.rows.map(r => ({
-                skill: r.skill,
-                title: r.title,
-                url: r.url,
-                note: r.note,
-                author: r.author,
-                peerIndex: r.peer_index
-            })),
+            resources: [...myResources, ...sharedResources]
         });
     } catch (err) {
         console.error("❌ Load Error:", err.message);
@@ -256,6 +294,7 @@ app.get('/api/users/search', async (req, res) => {
         try { companies = JSON.parse(user.company); } catch (e) { if (user.company) companies = [user.company]; }
 
         res.json({
+            id: user.id, // Return ID for linking
             name: user.name || user.username,
             company: companies, // Return array
             skills: skillsRes.rows // Return objects

@@ -83,6 +83,7 @@ const initDb = async () => {
     await addCol('users', 'created_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
     await addCol('skills', 'company', 'VARCHAR(100)');
     await addCol('peer_skills', 'company', 'VARCHAR(100)');
+    await addCol('peers', 'linked_user_id', 'INT');
 
     // Migration for resources
     await addCol('resources', 'skill', 'VARCHAR(100)');
