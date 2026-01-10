@@ -1,29 +1,51 @@
 :root {
-  /* Atlas Dark Mode Palette */
+  /* Atlas Dark Mode Palette (Default) */
   --sidebar-bg: #001E2B;
-  /* Dark Slate */
   --sidebar-text: #9FA1A2;
   --sidebar-hover: #1C2D38;
   --sidebar-active: #00ED64;
 
   --bg: #021a24;
-  /* Deep Dark Background (slightly darker than sidebar) */
   --card: #062f41;
-  /* Card Background (Dark Teal/Slate) */
   --text-primary: #FFFFFF;
   --text-secondary: #B8C4C2;
   --text-light: #889397;
 
   --accent: #00ED64;
-  /* Green */
   --accent-text: #001E2B;
 
   --border: #1C3D4D;
-  /* Dark Border */
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  /* Stronger shadow for dark mode depth */
   --radius: 8px;
+
+  --input-bg: #02131b;
+  --input-border: #1C3D4D;
+  --input-text: #ffffff;
 }
+
+body.light-mode {
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #64748b;
+  --sidebar-hover: #f1f5f9;
+  --sidebar-active: #059669;
+
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-light: #94a3b8;
+
+  --accent: #10b981;
+  --accent-text: #ffffff;
+
+  --border: #e2e8f0;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+}
+
 
 /* Reset & Base */
 * {
@@ -289,15 +311,15 @@ input,
 select {
   width: 100%;
   padding: 10px;
-  background: #02131b;
-  /* Very dark input bg */
-  border: 1px solid #1C3D4D;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 4px;
-  color: #fff;
+  color: var(--input-text);
   font-size: 14px;
   margin-top: 4px;
   margin-bottom: 12px;
 }
+
 
 input:focus {
   outline: none;

@@ -1182,8 +1182,32 @@
   let currentUserId = localStorage.getItem("psi_user_id");
   if (currentUserId === "undefined") currentUserId = null;
 
+  function setupTheme() {
+    const themeBtn = document.getElementById("themeToggleBtn");
+    const storedTheme = localStorage.getItem("psi_theme");
+
+    if (storedTheme === "light") {
+      document.body.classList.add("light-mode");
+      if (themeBtn) themeBtn.textContent = "☀️";
+    }
+
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        const isLight = document.body.classList.contains("light-mode");
+        themeBtn.textContent = isLight ? "☀️" : "🌙";
+        localStorage.setItem("psi_theme", isLight ? "light" : "dark");
+
+        // Refresh charts to pick up any style changes if needed (though canvas needs manual update usually)
+        // refreshCharts(); 
+      });
+    }
+  }
+
   function setupAuth() {
+    setupTheme();
     // console.log("running setupAuth");
+
     authScreen = document.getElementById("authScreen");
     authTitle = document.getElementById("authTitle");
     authForm = document.getElementById("authForm");
