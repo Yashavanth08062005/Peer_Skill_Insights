@@ -1,0 +1,35 @@
+// {
+//   "profile": {
+//     "name": "You",
+//     "meta": "3rd Year - CSE",
+//     "avatar": ""
+//   },
+//   "mySkills": [
+//     "Python",
+//     "HTML"
+//   ],
+//   "peers": [
+//     {
+//       "name": "imran",
+//       "skills": [
+//         "Github"
+//       ],
+//       "company": "junpier"
+//     },
+//     {
+//       "name": "farhaan",
+//       "skills": [
+//         "Typescript"
+//       ],
+//       "company": "Dell"
+//     },
+//     {
+//       "name": "farhan",
+//       "skills": [
+//         "MongoDB"
+//       ],
+//       "company": ""
+//     }
+//   ],
+//   "resources": []
+// }
