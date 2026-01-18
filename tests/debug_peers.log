@@ -1,0 +1,15 @@
+
+============================================================
+TEST: Global Resource Recommendation Flow (Resources Page)
+--- Phase 1: Sending Recommendation ---
+→ Navigating to Resources page...
+✓ Clicked 'Recommend to Peer'
+Found 3 selects.
+Select options: ['All Skills', 'C++', 'Github', 'Java', 'Mongodb', 'Ruby', 'SQL']
+Select options: ['All Peers', '01fe23bcs244@kletech.ac.in', '01fe23bcs378@kletech.ac.in', '01fe24bcs419@kletech.ac.in', '01fe24bcs420@kletech.ac.in', '01fe24bcs422@kletech.ac.in', '01fe24bcs424@kletech.ac.in']
+Select options: ['Select Peer...', '01fe24bcs420@kletech.ac.in', '01fe24bcs415@kletech.ac.in', '01fe23bcs378@kletech.ac.in', '01fe23bcs244@kletech.ac.in', '01fe24bcs422@kletech.ac.in', '01fe24bcs424@kletech.ac.in', '01fe24bcs200@kletech.ac.in']
+✓ Peer selected.
+✓ Clicked Send
+✓ Alert: Recommendation sent!
+--- Phase 2: Viewing ---
+✅ PASSED: Found Selenium Webdriver 1768102709
